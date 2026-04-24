@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trading_demo_app/core/theme/app_colors.dart';
-import 'package:trading_demo_app/core/theme/app_spacing.dart';
 import 'package:trading_demo_app/features/trading/presentation/bloc/watchlist/watchlist_bloc.dart';
 import 'package:trading_demo_app/shared/helper/responsive_size.dart';
 
@@ -245,7 +244,7 @@ class EditWatchlistPage extends StatelessWidget {
           vertical: rs(context, 11),
         ),
         itemCount: tabs.length,
-        separatorBuilder: (_, __) => SizedBox(width: rs(context, 7)),
+        separatorBuilder: (_, _) => SizedBox(width: rs(context, 7)),
         itemBuilder: (context, index) {
           final isActive = index == 0;
           return Container(
@@ -678,24 +677,25 @@ class EditWatchlistPage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // ── Secondary button (flex 1)
+          // ── Secondary button (same feel as watchlist controls)
           Expanded(
             child: SizedBox(
               height: rs(context, 46),
               child: OutlinedButton(
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: colors.border, width: 0.5),
+                  side: BorderSide(color: colors.border, width: 1),
                   foregroundColor: colors.textSec,
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: colors.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
                   'Manage',
-                  style: textTheme.titleSmall?.copyWith(
+                  style: textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.w600,
+                    color: colors.textSec,
                   ),
                 ),
               ),
@@ -704,25 +704,48 @@ class EditWatchlistPage extends StatelessWidget {
 
           const SizedBox(width: 10),
 
-          // ── Primary button (flex 2)
+          // ── Primary button (MATCH watchlist green style)
           Expanded(
             flex: 2,
             child: SizedBox(
               height: rs(context, 46),
               child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Changes saved',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.textPri,
+                        ),
+                      ),
+                      backgroundColor:
+                          colors.surfaceHigh, // matches WatchlistPage style
+                      behavior: SnackBarBehavior.floating,
+                      margin: EdgeInsets.all(rs(context, 12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(rs(context, 12)),
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+
+                  Navigator.of(context).pop();
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.accent,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colors.gain,
+                  foregroundColor: colors.textPri,
                   elevation: 0,
+                  shadowColor: colors.gain.withValues(alpha: 0.3),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
                   'Save changes',
-                  style: textTheme.titleMedium?.copyWith(
+                  style: textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ),

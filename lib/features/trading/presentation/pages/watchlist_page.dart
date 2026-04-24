@@ -54,7 +54,7 @@ class WatchlistPage extends StatelessWidget {
                                   rs(context, 80),
                             ),
                             itemCount: sortedStocks.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 SizedBox(height: rs(context, 6)),
                             itemBuilder: (context, index) {
                               final stock = sortedStocks[index];
@@ -306,21 +306,6 @@ class WatchlistPage extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: rs(context, 7),
-                  vertical: rs(context, 3),
-                ),
-                decoration: BoxDecoration(
-                  color: colors.surfaceHigh,
-                  borderRadius: BorderRadius.circular(rs(context, 5)),
-                  border: Border.all(color: colors.borderLight, width: 1),
-                ),
-                child: Text(
-                  '⌘ K',
-                  style: textTheme.labelSmall?.copyWith(color: colors.textSec),
-                ),
-              ),
             ],
           ),
         ),
@@ -337,7 +322,7 @@ class WatchlistPage extends StatelessWidget {
     return BlocBuilder<WatchlistBloc, WatchlistState>(
       builder: (context, state) {
         final selectedTab = state.maybeWhen(
-          loaded: (_, selectedIndex, __) => selectedIndex,
+          loaded: (_, selectedIndex, _) => selectedIndex,
           orElse: () => 0,
         );
         return Container(
