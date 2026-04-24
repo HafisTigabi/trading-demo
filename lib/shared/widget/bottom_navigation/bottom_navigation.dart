@@ -194,13 +194,13 @@ class _TradingNavBarState extends State<_TradingNavBar>
         borderRadius: BorderRadius.circular(rs(context, 28)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.55),
+            color: Colors.black.withValues(alpha: 0.55),
             blurRadius: 40,
             spreadRadius: -4,
             offset: const Offset(0, 16),
           ),
           BoxShadow(
-            color: colors.accent.withOpacity(0.12),
+            color: colors.accent.withValues(alpha: 0.12),
             blurRadius: 24,
             spreadRadius: -2,
             offset: const Offset(0, 8),
@@ -214,7 +214,7 @@ class _TradingNavBarState extends State<_TradingNavBar>
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(rs(context, 28)),
-              color: colors.surface.withOpacity(0.82), // ~82% opaque navy
+              color: colors.surface.withValues(alpha: 0.82), // ~82% opaque navy
               border: Border.all(color: colors.borderLight, width: 0.5),
             ),
             child: _buildNavContent(context),
@@ -297,7 +297,7 @@ class _GlowPill extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(rs(context, 18)),
         color: colors.accentGlow,
-        border: Border.all(color: colors.accent.withOpacity(0.3), width: 0.5),
+        border: Border.all(color: colors.accent.withValues(alpha: 0.3), width: 0.5),
       ),
     );
   }
@@ -381,7 +381,7 @@ class _GttButtonState extends State<_GttButton>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: colors.accent.withOpacity(0.4),
+                      color: colors.accent.withValues(alpha: 0.4),
                       blurRadius: 16,
                       spreadRadius: -2,
                       offset: const Offset(0, 4),

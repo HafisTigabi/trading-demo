@@ -76,14 +76,13 @@ class StockTile extends StatelessWidget {
                 ),
               ),
 
-            // Icon
             Container(
               width: rs(context, 42),
               height: rs(context, 42),
               decoration: BoxDecoration(
                 color: isEditMode ? iconBg : colors.accentGlow,
                 borderRadius: BorderRadius.circular(rs(context, isEditMode ? 10 : 12)),
-                border: isEditMode ? null : Border.all(color: colors.accent.withOpacity(0.3)),
+                border: isEditMode ? null : Border.all(color: colors.accent.withValues(alpha: 0.3)),
               ),
               alignment: Alignment.center,
               child: Text(
@@ -129,7 +128,7 @@ class StockTile extends StatelessWidget {
                       children: [
                         _pill('NSE', colors.accentSoft, colors.accentText, context),
                         SizedBox(width: rs(context, 5)),
-                        _pill('EQ', const Color(0xFF1A2530), const Color(0xFF5A8FB0), context),
+                        _pill('EQ', colors.surfaceHigh, colors.textSec, context),
                       ],
                     ),
                   ] else ...[
@@ -256,9 +255,9 @@ class SwipableStockTile extends StatelessWidget {
       background: Container(
         margin: EdgeInsets.only(bottom: rs(context, isEditMode ? 8 : 0)),
         decoration: BoxDecoration(
-          color: isEditMode ? const Color(0xFF7A1520) : colors.loss.withOpacity(0.15),
+          color: isEditMode ? colors.loss.withValues(alpha: 0.15) : colors.loss.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(rs(context, isEditMode ? 12 : 16)),
-          border: isEditMode ? null : Border.all(color: colors.loss.withOpacity(0.4)),
+          border: isEditMode ? null : Border.all(color: colors.loss.withValues(alpha: 0.4)),
         ),
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: rs(context, 22)),
@@ -267,14 +266,14 @@ class SwipableStockTile extends StatelessWidget {
           children: [
             Icon(
               Icons.delete_outline_rounded,
-              color: isEditMode ? const Color(0xFFFF6B6B) : colors.loss,
+              color: colors.loss,
               size: rs(context, isEditMode ? 26 : 22),
             ),
             SizedBox(height: rs(context, 3)),
             Text(
               'Remove',
               style: TextStyle(
-                color: isEditMode ? const Color(0xFFFF6B6B) : colors.loss,
+                color: colors.loss,
                 fontSize: rs(context, isEditMode ? 11 : 10),
                 fontWeight: FontWeight.w600,
               ),

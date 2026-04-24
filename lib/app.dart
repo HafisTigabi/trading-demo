@@ -19,7 +19,7 @@ class TradingDemoApp extends StatelessWidget {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
             title: 'Trading Demo',
-            theme: AppTheme.getTheme(context),
+            theme: AppTheme.getTheme(context, isDark: true),
             routerConfig: appRouter,
           );
         },

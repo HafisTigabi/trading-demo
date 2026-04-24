@@ -1,105 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trading_demo_app/core/theme/app_colors.dart';
+import 'package:trading_demo_app/core/theme/app_spacing.dart';
 import 'package:trading_demo_app/features/trading/presentation/bloc/watchlist/watchlist_bloc.dart';
 import 'package:trading_demo_app/shared/helper/responsive_size.dart';
 
 class EditWatchlistPage extends StatelessWidget {
   const EditWatchlistPage({super.key});
 
-  static const _bg = Color(0xFF0B0E11);
-  static const _surface = Color(0xFF161B23);
-  static const _border = Color(0xFF2A3245);
-  static const _textPri = Color(0xFFE8EBF0);
-  static const _textSec = Color(0xFF5A6475);
-  static const _accent = Color(0xFF1A6BDB);
-  static const _accentSoft = Color(0xFF1A2540);
-  static const _accentText = Color(0xFF4E94E6);
-  static const _green = Color(0xFF27AE74);
-  static const _greenBg = Color(0xFF0D2218);
-  static const _red = Color(0xFFE24B4A);
-  static const _redBg = Color(0xFF200D0D);
-  static const _amber = Color(0xFFE29A27);
-  static const _amberBg = Color(0xFF201508);
-  static const _purple = Color(0xFF9B7FE8);
-  static const _purpleBg = Color(0xFF1A1530);
-
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColorScheme>()!;
+    final textTheme = Theme.of(context).textTheme;
+
     return BlocBuilder<WatchlistBloc, WatchlistState>(
       builder: (context, state) {
         return state.maybeWhen(
           loaded: (watchlists, selectedIndex, _) {
             final stocks = watchlists[selectedIndex] ?? [];
-            return Theme(
-              data: ThemeData.dark().copyWith(
-                scaffoldBackgroundColor: _bg,
-                canvasColor: _surface,
-              ),
-              child: Scaffold(
-                backgroundColor: _bg,
-                appBar: _buildAppBar(context, selectedIndex),
-                body: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWatchlistDropdown(context, selectedIndex),
-                    _buildSegmentTabs(context),
-                    _buildListHeader(context, stocks.length),
-                    Expanded(child: _buildReorderableList(context, stocks)),
-                    _buildSwipeHint(context),
-                    _buildBottomActions(context),
-                  ],
-                ),
+            return Scaffold(
+              backgroundColor: colors.bg,
+              appBar: _buildAppBar(context, colors, textTheme, selectedIndex),
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWatchlistDropdown(
+                    context,
+                    colors,
+                    textTheme,
+                    selectedIndex,
+                  ),
+                  _buildSegmentTabs(context, colors, textTheme),
+                  _buildListHeader(context, colors, textTheme, stocks.length),
+                  Expanded(
+                    child: _buildReorderableList(
+                      context,
+                      colors,
+                      textTheme,
+                      stocks,
+                    ),
+                  ),
+                  _buildSwipeHint(context, colors, textTheme),
+                  _buildBottomActions(context, colors, textTheme),
+                ],
               ),
             );
           },
-          orElse: () => const Scaffold(
-            backgroundColor: _bg,
-            body: Center(child: CircularProgressIndicator(color: _accentText)),
+          orElse: () => Scaffold(
+            backgroundColor: colors.bg,
+            body: Center(
+              child: CircularProgressIndicator(color: colors.accent),
+            ),
           ),
         );
       },
     );
   }
 
-  // ── App bar — plain back icon, no decoration ────────────────────────────────
-  PreferredSizeWidget _buildAppBar(BuildContext context, int selectedIndex) {
+  // ── App bar ─────────────────────────────────────────────────────────────────
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+    int selectedIndex,
+  ) {
     return AppBar(
-      backgroundColor: _bg,
+      backgroundColor: colors.bg,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(0.5),
-        child: Container(height: 0.5, color: _border),
+        child: Container(height: 0.5, color: colors.border),
       ),
       leading: IconButton(
         onPressed: () => Navigator.of(context).pop(),
-        icon: const Icon(Icons.chevron_left_rounded, size: 28),
-        color: _textPri,
+        icon: Icon(Icons.chevron_left_rounded, size: rs(context, 28)),
+        color: colors.textPri,
         splashRadius: 20,
       ),
       titleSpacing: 0,
       title: Text(
         'Edit watchlist',
-        style: TextStyle(
-          color: _textPri,
-          fontSize: rs(context, 17),
+        style: textTheme.headlineMedium?.copyWith(
+          color: colors.textPri,
           fontWeight: FontWeight.w600,
         ),
       ),
       actions: [
         Container(
-          margin: const EdgeInsets.only(right: 16),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          margin: EdgeInsets.only(right: rs(context, 16)),
+          padding: EdgeInsets.symmetric(
+            horizontal: rs(context, 10),
+            vertical: rs(context, 4),
+          ),
           decoration: BoxDecoration(
-            color: _accentSoft,
+            color: colors.accentSoft,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF1E3A6E), width: 0.5),
+            border: Border.all(
+              color: colors.accent.withValues(alpha: 0.3),
+              width: 0.5,
+            ),
           ),
           child: Text(
             'WL ${_watchlistLabel(selectedIndex)}',
-            style: const TextStyle(
-              color: _accentText,
-              fontSize: 12,
+            style: textTheme.labelSmall?.copyWith(
+              color: colors.accentText,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -109,7 +114,12 @@ class EditWatchlistPage extends StatelessWidget {
   }
 
   // ── Watchlist dropdown ───────────────────────────────────────────────────────
-  Widget _buildWatchlistDropdown(BuildContext context, int selectedIndex) {
+  Widget _buildWatchlistDropdown(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+    int selectedIndex,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         rs(context, 16),
@@ -122,9 +132,8 @@ class EditWatchlistPage extends StatelessWidget {
         children: [
           Text(
             'ACTIVE WATCHLIST',
-            style: TextStyle(
-              fontSize: rs(context, 11),
-              color: _textSec,
+            style: textTheme.labelSmall?.copyWith(
+              color: colors.textSec,
               letterSpacing: 0.7,
               fontWeight: FontWeight.w600,
             ),
@@ -132,21 +141,21 @@ class EditWatchlistPage extends StatelessWidget {
           const SizedBox(height: 7),
           Container(
             decoration: BoxDecoration(
-              color: _surface,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _border, width: 0.5),
+              border: Border.all(color: colors.border, width: 0.5),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
                 value: selectedIndex,
                 isExpanded: true,
-                dropdownColor: _surface,
+                dropdownColor: colors.surface,
                 borderRadius: BorderRadius.circular(12),
-                style: const TextStyle(color: _textPri, fontSize: 15),
-                icon: const Icon(
+                style: textTheme.bodyMedium?.copyWith(color: colors.textPri),
+                icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: _textSec,
-                  size: 22,
+                  color: colors.textSec,
+                  size: rs(context, 22),
                 ),
                 padding: EdgeInsets.symmetric(
                   horizontal: rs(context, 16),
@@ -159,17 +168,15 @@ class EditWatchlistPage extends StatelessWidget {
                     children: [
                       Text(
                         'Watchlist ${_watchlistLabel(i)}',
-                        style: TextStyle(
-                          fontSize: rs(context, 15),
+                        style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: _textPri,
+                          color: colors.textPri,
                         ),
                       ),
                       Text(
                         '6 instruments · NSE',
-                        style: TextStyle(
-                          fontSize: rs(context, 12),
-                          color: _textSec,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.textSec,
                         ),
                       ),
                     ],
@@ -180,9 +187,8 @@ class EditWatchlistPage extends StatelessWidget {
                     value: 0,
                     child: Text(
                       'Watchlist 1',
-                      style: TextStyle(
-                        color: _textPri,
-                        fontSize: rs(context, 15),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.textPri,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -191,9 +197,8 @@ class EditWatchlistPage extends StatelessWidget {
                     value: 1,
                     child: Text(
                       'Watchlist 5',
-                      style: TextStyle(
-                        color: _textPri,
-                        fontSize: rs(context, 15),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.textPri,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -202,9 +207,8 @@ class EditWatchlistPage extends StatelessWidget {
                     value: 2,
                     child: Text(
                       'Watchlist 6',
-                      style: TextStyle(
-                        color: _textPri,
-                        fontSize: rs(context, 15),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.textPri,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -226,7 +230,11 @@ class EditWatchlistPage extends StatelessWidget {
   }
 
   // ── Segment tabs ─────────────────────────────────────────────────────────────
-  Widget _buildSegmentTabs(BuildContext context) {
+  Widget _buildSegmentTabs(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final tabs = ['All', 'Equity', 'F&O', 'MF'];
     return SizedBox(
       height: rs(context, 52),
@@ -243,20 +251,21 @@ class EditWatchlistPage extends StatelessWidget {
           return Container(
             padding: EdgeInsets.symmetric(horizontal: rs(context, 14)),
             decoration: BoxDecoration(
-              color: isActive ? _accentSoft : Colors.transparent,
+              color: isActive ? colors.accentSoft : Colors.transparent,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isActive ? const Color(0xFF1E3A6E) : _border,
+                color: isActive
+                    ? colors.accent.withValues(alpha: 0.3)
+                    : colors.border,
                 width: 0.5,
               ),
             ),
             alignment: Alignment.center,
             child: Text(
               tabs[index],
-              style: TextStyle(
-                fontSize: rs(context, 12),
+              style: textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w500,
-                color: isActive ? _accentText : _textSec,
+                color: isActive ? colors.accentText : colors.textSec,
               ),
             ),
           );
@@ -266,7 +275,12 @@ class EditWatchlistPage extends StatelessWidget {
   }
 
   // ── List header ──────────────────────────────────────────────────────────────
-  Widget _buildListHeader(BuildContext context, int count) {
+  Widget _buildListHeader(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+    int count,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         rs(context, 16),
@@ -279,24 +293,28 @@ class EditWatchlistPage extends StatelessWidget {
         children: [
           Text(
             'INSTRUMENTS',
-            style: TextStyle(
-              fontSize: rs(context, 11),
-              color: _textSec,
+            style: textTheme.labelSmall?.copyWith(
+              color: colors.textSec,
               letterSpacing: 0.7,
               fontWeight: FontWeight.w600,
             ),
           ),
           Text(
             '$count / 50',
-            style: TextStyle(fontSize: rs(context, 12), color: _textSec),
+            style: textTheme.labelMedium?.copyWith(color: colors.textSec),
           ),
         ],
       ),
     );
   }
 
-  // ── Reorderable list with swipe-to-delete ────────────────────────────────────
-  Widget _buildReorderableList(BuildContext context, List stocks) {
+  // ── Reorderable list ─────────────────────────────────────────────────────────
+  Widget _buildReorderableList(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+    List stocks,
+  ) {
     return Theme(
       data: Theme.of(context).copyWith(
         canvasColor: Colors.transparent,
@@ -317,7 +335,13 @@ class EditWatchlistPage extends StatelessWidget {
         },
         itemBuilder: (context, index) {
           final stock = stocks[index];
-          return _buildSwipableStockTile(context, stock, index);
+          return _buildSwipableStockTile(
+            context,
+            colors,
+            textTheme,
+            stock,
+            index,
+          );
         },
       ),
     );
@@ -326,6 +350,8 @@ class EditWatchlistPage extends StatelessWidget {
   // ── Swipable stock tile ──────────────────────────────────────────────────────
   Widget _buildSwipableStockTile(
     BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
     dynamic stock,
     int index,
   ) {
@@ -333,90 +359,99 @@ class EditWatchlistPage extends StatelessWidget {
       key: ValueKey(stock.id),
       direction: DismissDirection.endToStart,
       confirmDismiss: (_) async {
-        return await _showDeleteConfirm(context, stock.name);
+        return await _showDeleteConfirm(context, colors, textTheme, stock.name);
       },
       onDismissed: (_) {
         context.read<WatchlistBloc>().add(
           WatchlistEvent.deleteStock(id: stock.id),
         );
       },
-      // ── Red background revealed on swipe
       background: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF7A1520),
+          color: colors.loss.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colors.loss.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
         ),
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 22),
+        padding: EdgeInsets.only(right: rs(context, 22)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.delete_outline_rounded,
-              color: Color(0xFFFF6B6B),
-              size: 26,
+              color: colors.loss,
+              size: rs(context, 26),
             ),
             const SizedBox(height: 3),
             Text(
               'Remove',
-              style: TextStyle(
-                color: const Color(0xFFFF6B6B),
-                fontSize: rs(context, 11),
+              style: textTheme.labelSmall?.copyWith(
+                color: colors.loss,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
       ),
-      child: _buildStockTile(context, stock, index),
+      child: _buildStockTile(context, colors, textTheme, stock, index),
     );
   }
 
   // ── Stock tile ───────────────────────────────────────────────────────────────
-  Widget _buildStockTile(BuildContext context, dynamic stock, int index) {
-    // Color-coded icon by cycling — replace with real segment/type logic
+  Widget _buildStockTile(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+    dynamic stock,
+    int index,
+  ) {
     final iconStyles = [
-      (_accentSoft, _accentText),
-      (_greenBg, _green),
-      (_amberBg, _amber),
-      (_purpleBg, _purple),
-      (_redBg, _red),
+      (colors.accentSoft, colors.accentText),
+      (colors.gainBg, colors.gain),
+      (colors.amberBg, colors.amber),
+      (colors.purpleBg, colors.purple),
+      (colors.lossBg, colors.loss),
     ];
     final (iconBg, iconFg) = iconStyles[index % iconStyles.length];
     final initials = stock.name.length >= 2
         ? stock.name.substring(0, 2).toUpperCase()
         : stock.name.toUpperCase();
 
-    // Mocked price/change — replace with real model fields
     final isPositive = index % 3 != 2;
-    final changeColor = isPositive ? _green : _red;
-    final changeBg = isPositive ? _greenBg : _redBg;
+    final changeColor = isPositive ? colors.gain : colors.loss;
+    final changeBg = isPositive ? colors.gainBg : colors.lossBg;
     final changeText = isPositive ? '+1.24%' : '−0.43%';
 
     return Container(
       key: ValueKey('tile_${stock.id}'),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: _surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border, width: 0.5),
+        border: Border.all(color: colors.border, width: 0.5),
       ),
       child: Row(
         children: [
           // ── Drag handle
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+            padding: EdgeInsets.symmetric(
+              horizontal: rs(context, 12),
+              vertical: rs(context, 18),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(
                 3,
                 (_) => Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  width: 18,
-                  height: 2,
+                  margin: EdgeInsets.only(bottom: rs(context, 4)),
+                  width: rs(context, 18),
+                  height: rs(context, 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A3245),
+                    color: colors.borderLight,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -435,8 +470,7 @@ class EditWatchlistPage extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               initials,
-              style: TextStyle(
-                fontSize: rs(context, 13),
+              style: textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: iconFg,
               ),
@@ -454,31 +488,34 @@ class EditWatchlistPage extends StatelessWidget {
                 children: [
                   Text(
                     stock.name,
-                    style: TextStyle(
-                      fontSize: rs(context, 15),
+                    style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: _textPri,
+                      color: colors.textPri,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     stock.name,
-                    style: TextStyle(
-                      fontSize: rs(context, 12),
-                      color: _textSec,
-                    ),
+                    style: textTheme.bodySmall?.copyWith(color: colors.textSec),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      _pill('NSE', _accentSoft, _accentText, context),
+                      _pill(
+                        'NSE',
+                        colors.accentSoft,
+                        colors.accentText,
+                        context,
+                        textTheme,
+                      ),
                       const SizedBox(width: 5),
                       _pill(
                         'EQ',
-                        const Color(0xFF1A2530),
-                        const Color(0xFF5A8FB0),
+                        colors.surfaceHigh,
+                        colors.textSec,
                         context,
+                        textTheme,
                       ),
                     ],
                   ),
@@ -494,11 +531,10 @@ class EditWatchlistPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '₹2,847.50', // replace with stock.ltp
-                  style: TextStyle(
-                    fontSize: rs(context, 15),
+                  '₹2,847.50',
+                  style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: _textPri,
+                    color: colors.textPri,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -513,8 +549,7 @@ class EditWatchlistPage extends StatelessWidget {
                   ),
                   child: Text(
                     changeText,
-                    style: TextStyle(
-                      fontSize: rs(context, 11),
+                    style: textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: changeColor,
                     ),
@@ -529,7 +564,13 @@ class EditWatchlistPage extends StatelessWidget {
   }
 
   // ── Exchange/type pill ───────────────────────────────────────────────────────
-  Widget _pill(String label, Color bg, Color fg, BuildContext context) {
+  Widget _pill(
+    String label,
+    Color bg,
+    Color fg,
+    BuildContext context,
+    TextTheme textTheme,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
@@ -538,7 +579,7 @@ class EditWatchlistPage extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: textTheme.labelSmall?.copyWith(
           fontSize: rs(context, 10),
           fontWeight: FontWeight.w600,
           color: fg,
@@ -548,24 +589,25 @@ class EditWatchlistPage extends StatelessWidget {
   }
 
   // ── Swipe hint ───────────────────────────────────────────────────────────────
-  Widget _buildSwipeHint(BuildContext context) {
+  Widget _buildSwipeHint(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.swipe_left_rounded,
-            size: 14,
-            color: Color(0xFF2A3245),
+            size: rs(context, 14),
+            color: colors.textMuted,
           ),
           const SizedBox(width: 5),
           Text(
             'Swipe left to remove',
-            style: TextStyle(
-              fontSize: rs(context, 11),
-              color: const Color(0xFF2A3245),
-            ),
+            style: textTheme.bodySmall?.copyWith(color: colors.textMuted),
           ),
         ],
       ),
@@ -575,44 +617,39 @@ class EditWatchlistPage extends StatelessWidget {
   // ── Delete confirm dialog ────────────────────────────────────────────────────
   Future<bool?> _showDeleteConfirm(
     BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
     String stockName,
   ) async {
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161B23),
+        backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: Color(0xFF2A3245), width: 0.5),
+          side: BorderSide(color: colors.border, width: 0.5),
         ),
-        title: const Text(
+        title: Text(
           'Remove stock',
-          style: TextStyle(
-            color: Color(0xFFE8EBF0),
-            fontSize: 16,
+          style: textTheme.headlineSmall?.copyWith(
+            color: colors.textPri,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           'Remove $stockName from this watchlist?',
-          style: const TextStyle(color: Color(0xFF5A6475), fontSize: 14),
+          style: textTheme.bodyMedium?.copyWith(color: colors.textSec),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF5A6475)),
-            ),
+            child: Text('Cancel', style: TextStyle(color: colors.textSec)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
+            child: Text(
               'Remove',
-              style: TextStyle(
-                color: Color(0xFFE24B4A),
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: colors.loss, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -621,7 +658,11 @@ class EditWatchlistPage extends StatelessWidget {
   }
 
   // ── Bottom actions ───────────────────────────────────────────────────────────
-  Widget _buildBottomActions(BuildContext context) {
+  Widget _buildBottomActions(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Container(
@@ -631,9 +672,9 @@ class EditWatchlistPage extends StatelessWidget {
         rs(context, 16),
         rs(context, 12) + bottomInset,
       ),
-      decoration: const BoxDecoration(
-        color: _bg,
-        border: Border(top: BorderSide(color: _border, width: 0.5)),
+      decoration: BoxDecoration(
+        color: colors.bg,
+        border: Border(top: BorderSide(color: colors.border, width: 0.5)),
       ),
       child: Row(
         children: [
@@ -644,8 +685,8 @@ class EditWatchlistPage extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: _border, width: 0.5),
-                  foregroundColor: const Color(0xFF8A95A3),
+                  side: BorderSide(color: colors.border, width: 0.5),
+                  foregroundColor: colors.textSec,
                   backgroundColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -653,8 +694,7 @@ class EditWatchlistPage extends StatelessWidget {
                 ),
                 child: Text(
                   'Manage',
-                  style: TextStyle(
-                    fontSize: rs(context, 13),
+                  style: textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -672,7 +712,7 @@ class EditWatchlistPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent,
+                  backgroundColor: colors.accent,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -681,8 +721,7 @@ class EditWatchlistPage extends StatelessWidget {
                 ),
                 child: Text(
                   'Save changes',
-                  style: TextStyle(
-                    fontSize: rs(context, 14),
+                  style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),

@@ -7,7 +7,6 @@ import 'package:trading_demo_app/shared/helper/responsive_size.dart';
 
 import 'package:trading_demo_app/core/theme/app_colors.dart';
 import 'package:trading_demo_app/core/theme/app_spacing.dart';
-import 'package:trading_demo_app/core/theme/app_theme.dart';
 import 'package:trading_demo_app/shared/widget/stock_tile.dart';
 
 class WatchlistPage extends StatelessWidget {
@@ -19,114 +18,102 @@ class WatchlistPage extends StatelessWidget {
       create: (_) => WatchlistBloc()..add(const WatchlistEvent.loadWatchlist()),
       child: Builder(
         builder: (context) {
-          return Theme(
-            data: AppTheme.getTheme(context, isDark: true),
-            child: Builder(
-              builder: (context) {
-                final colors = Theme.of(context).extension<AppColorScheme>()!;
-                return Scaffold(
-                  backgroundColor: const Color(0xFF0A0E17),
-                  appBar: _buildAppBar(context, colors),
-                  body: Column(
-                    children: [
-                      _buildTopSummary(context, colors),
-                      _buildSearchBar(context, colors),
-                      _buildTabs(context, colors),
-                      _buildActionRow(context, colors),
-                      Expanded(
-                        child: BlocBuilder<WatchlistBloc, WatchlistState>(
-                          builder: (context, state) {
-                            return state.when(
-                              initial: () => const SizedBox.shrink(),
-                              loading: () => _buildLoader(context),
-                              loaded: (watchlists, selectedIndex, sortType) {
-                                final currentList =
-                                    watchlists[selectedIndex] ?? [];
-                                final sortedStocks = _getSortedStocks(
-                                  currentList,
-                                  sortType,
-                                );
-                                if (sortedStocks.isEmpty) {
-                                  return _buildEmpty(context);
-                                }
-                                return ListView.separated(
-                                  padding: EdgeInsets.only(
-                                    left: rs(context, AppSpacing.md),
-                                    right: rs(context, AppSpacing.md),
-                                    bottom:
-                                        MediaQuery.of(context).padding.bottom +
-                                        rs(context, 80),
-                                  ),
-                                  itemCount: sortedStocks.length,
-                                  separatorBuilder: (_, __) =>
-                                      SizedBox(height: rs(context, 6)),
-                                  itemBuilder: (context, index) {
-                                    final stock = sortedStocks[index];
-                                    return SwipableStockTile(
-                                      stock: stock,
-                                      isEditMode: false,
-                                      index: index,
-                                      onTap: () {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              '${stock.name} details coming soon',
-                                            ),
-                                            backgroundColor: const Color(
-                                              0xFF1C2333,
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    rs(context, 12),
-                                                  ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      onDismissed: () {
-                                        context.read<WatchlistBloc>().add(
-                                          WatchlistEvent.deleteStock(
-                                            id: stock.id,
-                                          ),
-                                        );
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              '${stock.name} removed',
-                                            ),
-                                            backgroundColor: const Color(
-                                              0xFF1C2333,
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    rs(context, 12),
-                                                  ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                );
-                              },
-                              error: (message) =>
-                                  _buildError(context, message, colors),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+          final colors = Theme.of(context).extension<AppColorScheme>()!;
+          final textTheme = Theme.of(context).textTheme;
+
+          return Scaffold(
+            backgroundColor: colors.bg,
+            appBar: _buildAppBar(context, colors, textTheme),
+            body: Column(
+              children: [
+                _buildTopSummary(context, colors, textTheme),
+                _buildSearchBar(context, colors, textTheme),
+                _buildTabs(context, colors, textTheme),
+                _buildActionRow(context, colors, textTheme),
+                Expanded(
+                  child: BlocBuilder<WatchlistBloc, WatchlistState>(
+                    builder: (context, state) {
+                      return state.when(
+                        initial: () => const SizedBox.shrink(),
+                        loading: () => _buildLoader(context, colors),
+                        loaded: (watchlists, selectedIndex, sortType) {
+                          final currentList = watchlists[selectedIndex] ?? [];
+                          final sortedStocks = _getSortedStocks(
+                            currentList,
+                            sortType,
+                          );
+                          if (sortedStocks.isEmpty) {
+                            return _buildEmpty(context, colors, textTheme);
+                          }
+                          return ListView.separated(
+                            padding: EdgeInsets.only(
+                              left: rs(context, AppSpacing.md),
+                              right: rs(context, AppSpacing.md),
+                              bottom:
+                                  MediaQuery.of(context).padding.bottom +
+                                  rs(context, 80),
+                            ),
+                            itemCount: sortedStocks.length,
+                            separatorBuilder: (_, __) =>
+                                SizedBox(height: rs(context, 6)),
+                            itemBuilder: (context, index) {
+                              final stock = sortedStocks[index];
+                              return SwipableStockTile(
+                                stock: stock,
+                                isEditMode: false,
+                                index: index,
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${stock.name} details coming soon',
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          color: colors.textPri,
+                                        ),
+                                      ),
+                                      backgroundColor: colors.surfaceHigh,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          rs(context, 12),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onDismissed: () {
+                                  context.read<WatchlistBloc>().add(
+                                    WatchlistEvent.deleteStock(id: stock.id),
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${stock.name} removed',
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          color: colors.textPri,
+                                        ),
+                                      ),
+                                      backgroundColor: colors.surfaceHigh,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          rs(context, 12),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                        error: (message) =>
+                            _buildError(context, message, colors, textTheme),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ],
             ),
           );
         },
@@ -137,9 +124,10 @@ class WatchlistPage extends StatelessWidget {
   PreferredSizeWidget _buildAppBar(
     BuildContext context,
     AppColorScheme colors,
+    TextTheme textTheme,
   ) {
     return AppBar(
-      backgroundColor: const Color(0xFF0A0E17),
+      backgroundColor: colors.bg,
       elevation: 0,
       centerTitle: false,
       titleSpacing: rs(context, 20),
@@ -152,11 +140,11 @@ class WatchlistPage extends StatelessWidget {
             height: rs(context, 8),
             margin: EdgeInsets.only(right: rs(context, 8)),
             decoration: BoxDecoration(
-              color: const Color(0xFF00C076),
+              color: colors.gain,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00C076).withOpacity(0.6),
+                  color: colors.gain.withValues(alpha: 0.6),
                   blurRadius: 8,
                   spreadRadius: 1,
                 ),
@@ -165,11 +153,9 @@ class WatchlistPage extends StatelessWidget {
           ),
           Text(
             'Watchlist',
-            style: TextStyle(
-              color: Colors.white,
+            style: textTheme.headlineLarge?.copyWith(
+              color: colors.textPri,
               fontWeight: FontWeight.w700,
-              fontSize: rs(context, 20),
-              letterSpacing: -0.5,
             ),
           ),
         ],
@@ -195,19 +181,15 @@ class WatchlistPage extends StatelessWidget {
                 vertical: rs(context, 7),
               ),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: const Color(0xFF00C076).withOpacity(0.5),
-                ),
+                border: Border.all(color: colors.gain.withValues(alpha: 0.5)),
                 borderRadius: BorderRadius.circular(rs(context, 20)),
-                color: const Color(0xFF00C076).withOpacity(0.08),
+                color: colors.gain.withValues(alpha: 0.08),
               ),
               child: Text(
                 'Edit',
-                style: TextStyle(
-                  color: const Color(0xFF00C076),
+                style: textTheme.titleSmall?.copyWith(
+                  color: colors.gain,
                   fontWeight: FontWeight.w600,
-                  fontSize: rs(context, 13),
-                  letterSpacing: 0.2,
                 ),
               ),
             ),
@@ -220,11 +202,7 @@ class WatchlistPage extends StatelessWidget {
           height: 1,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Colors.transparent,
-                const Color(0xFF1E2A3A),
-                Colors.transparent,
-              ],
+              colors: [Colors.transparent, colors.border, Colors.transparent],
             ),
           ),
         ),
@@ -232,7 +210,11 @@ class WatchlistPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTopSummary(BuildContext context, AppColorScheme colors) {
+  Widget _buildTopSummary(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         rs(context, AppSpacing.md),
@@ -249,6 +231,8 @@ class WatchlistPage extends StatelessWidget {
               change: '+284.12',
               changePercent: '+0.39%',
               isPositive: true,
+              colors: colors,
+              textTheme: textTheme,
             ),
           ),
           SizedBox(width: rs(context, 10)),
@@ -259,6 +243,8 @@ class WatchlistPage extends StatelessWidget {
               change: '-112.70',
               changePercent: '-0.23%',
               isPositive: false,
+              colors: colors,
+              textTheme: textTheme,
             ),
           ),
         ],
@@ -266,7 +252,11 @@ class WatchlistPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context, AppColorScheme colors) {
+  Widget _buildSearchBar(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         rs(context, AppSpacing.md),
@@ -278,8 +268,11 @@ class WatchlistPage extends StatelessWidget {
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Search screen coming soon'),
-              backgroundColor: const Color(0xFF1C2333),
+              content: Text(
+                'Search screen coming soon',
+                style: textTheme.bodyMedium?.copyWith(color: colors.textPri),
+              ),
+              backgroundColor: colors.surfaceHigh,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(rs(context, 12)),
@@ -294,23 +287,21 @@ class WatchlistPage extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(rs(context, 12)),
-            color: const Color(0xFF111827),
-            border: Border.all(color: const Color(0xFF1E2A3A), width: 1),
+            color: colors.surface,
+            border: Border.all(color: colors.border, width: 1),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.search_rounded,
-                color: const Color(0xFF4B5563),
+                color: colors.textSec,
                 size: rs(context, 18),
               ),
               SizedBox(width: rs(context, 10)),
               Text(
                 'Search stocks, ETFs, futures…',
-                style: TextStyle(
-                  color: const Color(0xFF4B5563),
-                  fontSize: rs(context, 13.5),
-                  fontWeight: FontWeight.w400,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colors.textSec,
                   letterSpacing: 0.1,
                 ),
               ),
@@ -321,18 +312,13 @@ class WatchlistPage extends StatelessWidget {
                   vertical: rs(context, 3),
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1C2333),
+                  color: colors.surfaceHigh,
                   borderRadius: BorderRadius.circular(rs(context, 5)),
-                  border: Border.all(color: const Color(0xFF2A3A50), width: 1),
+                  border: Border.all(color: colors.borderLight, width: 1),
                 ),
                 child: Text(
                   '⌘ K',
-                  style: TextStyle(
-                    color: const Color(0xFF4B5563),
-                    fontSize: rs(context, 10),
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.5,
-                  ),
+                  style: textTheme.labelSmall?.copyWith(color: colors.textSec),
                 ),
               ),
             ],
@@ -342,7 +328,11 @@ class WatchlistPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTabs(BuildContext context, AppColorScheme colors) {
+  Widget _buildTabs(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     const tabs = ['Watchlist 1', 'Watchlist 5', 'Watchlist 6'];
     return BlocBuilder<WatchlistBloc, WatchlistState>(
       builder: (context, state) {
@@ -357,9 +347,9 @@ class WatchlistPage extends StatelessWidget {
           ),
           height: rs(context, 42),
           decoration: BoxDecoration(
-            color: const Color(0xFF111827),
+            color: colors.surface,
             borderRadius: BorderRadius.circular(rs(context, 10)),
-            border: Border.all(color: const Color(0xFF1E2A3A), width: 1),
+            border: Border.all(color: colors.border, width: 1),
           ),
           child: Row(
             children: List.generate(tabs.length, (index) {
@@ -375,16 +365,12 @@ class WatchlistPage extends StatelessWidget {
                     duration: const Duration(milliseconds: 200),
                     margin: EdgeInsets.all(rs(context, 4)),
                     decoration: BoxDecoration(
-                      color: isActive
-                          ? const Color(0xFF00C076)
-                          : Colors.transparent,
+                      color: isActive ? colors.gain : Colors.transparent,
                       borderRadius: BorderRadius.circular(rs(context, 7)),
                       boxShadow: isActive
                           ? [
                               BoxShadow(
-                                color: const Color(
-                                  0xFF00C076,
-                                ).withOpacity(0.25),
+                                color: colors.gain.withValues(alpha: 0.25),
                                 blurRadius: 12,
                                 offset: const Offset(0, 2),
                               ),
@@ -394,15 +380,11 @@ class WatchlistPage extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       tabs[index],
-                      style: TextStyle(
-                        color: isActive
-                            ? Colors.white
-                            : const Color(0xFF4B5563),
+                      style: textTheme.labelMedium?.copyWith(
+                        color: isActive ? colors.textPri : colors.textSec,
                         fontWeight: isActive
                             ? FontWeight.w700
                             : FontWeight.w500,
-                        fontSize: rs(context, 12),
-                        letterSpacing: isActive ? 0.1 : 0,
                       ),
                     ),
                   ),
@@ -415,7 +397,11 @@ class WatchlistPage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionRow(BuildContext context, AppColorScheme colors) {
+  Widget _buildActionRow(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         rs(context, AppSpacing.md),
@@ -426,16 +412,16 @@ class WatchlistPage extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => _showSortBottomSheet(context, colors),
+            onTap: () => _showSortBottomSheet(context, colors, textTheme),
             child: Container(
               padding: EdgeInsets.symmetric(
                 horizontal: rs(context, 12),
                 vertical: rs(context, 7),
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFF111827),
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(rs(context, 8)),
-                border: Border.all(color: const Color(0xFF1E2A3A), width: 1),
+                border: Border.all(color: colors.border, width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -443,16 +429,14 @@ class WatchlistPage extends StatelessWidget {
                   Icon(
                     Icons.swap_vert_rounded,
                     size: rs(context, 15),
-                    color: const Color(0xFF6B7280),
+                    color: colors.textSec,
                   ),
                   SizedBox(width: rs(context, 5)),
                   Text(
                     'Sort',
-                    style: TextStyle(
-                      color: const Color(0xFF6B7280),
-                      fontSize: rs(context, 12),
+                    style: textTheme.labelMedium?.copyWith(
+                      color: colors.textSec,
                       fontWeight: FontWeight.w500,
-                      letterSpacing: 0.2,
                     ),
                   ),
                 ],
@@ -467,10 +451,10 @@ class WatchlistPage extends StatelessWidget {
               vertical: rs(context, 5),
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF00C076).withOpacity(0.08),
+              color: colors.gain.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(rs(context, 20)),
               border: Border.all(
-                color: const Color(0xFF00C076).withOpacity(0.2),
+                color: colors.gain.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -480,17 +464,16 @@ class WatchlistPage extends StatelessWidget {
                 Container(
                   width: rs(context, 5),
                   height: rs(context, 5),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF00C076),
+                  decoration: BoxDecoration(
+                    color: colors.gain,
                     shape: BoxShape.circle,
                   ),
                 ),
                 SizedBox(width: rs(context, 5)),
                 Text(
                   'MARKET OPEN',
-                  style: TextStyle(
-                    color: const Color(0xFF00C076),
-                    fontSize: rs(context, 9.5),
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colors.gain,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                   ),
@@ -503,15 +486,19 @@ class WatchlistPage extends StatelessWidget {
     );
   }
 
-  void _showSortBottomSheet(BuildContext context, AppColorScheme colors) {
+  void _showSortBottomSheet(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF111827),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: SafeArea(
             child: Column(
@@ -525,7 +512,7 @@ class WatchlistPage extends StatelessWidget {
                   width: rs(context, 36),
                   height: rs(context, 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A3A50),
+                    color: colors.borderLight,
                     borderRadius: BorderRadius.circular(rs(context, 4)),
                   ),
                 ),
@@ -540,11 +527,9 @@ class WatchlistPage extends StatelessWidget {
                     children: [
                       Text(
                         'Sort by',
-                        style: TextStyle(
-                          color: Colors.white,
+                        style: textTheme.headlineMedium?.copyWith(
+                          color: colors.textPri,
                           fontWeight: FontWeight.w700,
-                          fontSize: rs(context, 17),
-                          letterSpacing: -0.3,
                         ),
                       ),
                     ],
@@ -554,6 +539,7 @@ class WatchlistPage extends StatelessWidget {
                   context,
                   bottomSheetContext,
                   colors,
+                  textTheme,
                   label: 'Price — High to Low',
                   icon: Icons.arrow_downward_rounded,
                   sortType: WatchlistSortType.priceHighToLow,
@@ -562,6 +548,7 @@ class WatchlistPage extends StatelessWidget {
                   context,
                   bottomSheetContext,
                   colors,
+                  textTheme,
                   label: 'Price — Low to High',
                   icon: Icons.arrow_upward_rounded,
                   sortType: WatchlistSortType.priceLowToHigh,
@@ -570,6 +557,7 @@ class WatchlistPage extends StatelessWidget {
                   context,
                   bottomSheetContext,
                   colors,
+                  textTheme,
                   label: '% Change — High to Low',
                   icon: Icons.trending_up_rounded,
                   sortType: WatchlistSortType.changeHighToLow,
@@ -578,6 +566,7 @@ class WatchlistPage extends StatelessWidget {
                   context,
                   bottomSheetContext,
                   colors,
+                  textTheme,
                   label: 'Alphabetical A → Z',
                   icon: Icons.sort_by_alpha_rounded,
                   sortType: WatchlistSortType.az,
@@ -594,7 +583,8 @@ class WatchlistPage extends StatelessWidget {
   Widget _sortOption(
     BuildContext context,
     BuildContext sheetContext,
-    AppColorScheme colors, {
+    AppColorScheme colors,
+    TextTheme textTheme, {
     required String label,
     required IconData icon,
     required WatchlistSortType sortType,
@@ -616,9 +606,9 @@ class WatchlistPage extends StatelessWidget {
           vertical: rs(context, 13),
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A0E17),
+          color: colors.bg,
           borderRadius: BorderRadius.circular(rs(context, 12)),
-          border: Border.all(color: const Color(0xFF1E2A3A), width: 1),
+          border: Border.all(color: colors.border, width: 1),
         ),
         child: Row(
           children: [
@@ -626,28 +616,23 @@ class WatchlistPage extends StatelessWidget {
               width: rs(context, 34),
               height: rs(context, 34),
               decoration: BoxDecoration(
-                color: const Color(0xFF00C076).withOpacity(0.1),
+                color: colors.gain.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(rs(context, 10)),
               ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF00C076),
-                size: rs(context, 16),
-              ),
+              child: Icon(icon, color: colors.gain, size: rs(context, 16)),
             ),
             SizedBox(width: rs(context, 14)),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: rs(context, 14),
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.textPri,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const Spacer(),
             Icon(
               Icons.chevron_right_rounded,
-              color: const Color(0xFF2A3A50),
+              color: colors.textMuted,
               size: rs(context, 18),
             ),
           ],
@@ -656,16 +641,17 @@ class WatchlistPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLoader(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: Color(0xFF00C076),
-        strokeWidth: 2,
-      ),
+  Widget _buildLoader(BuildContext context, AppColorScheme colors) {
+    return Center(
+      child: CircularProgressIndicator(color: colors.gain, strokeWidth: 2),
     );
   }
 
-  Widget _buildEmpty(BuildContext context) {
+  Widget _buildEmpty(
+    BuildContext context,
+    AppColorScheme colors,
+    TextTheme textTheme,
+  ) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -674,36 +660,31 @@ class WatchlistPage extends StatelessWidget {
             width: rs(context, 68),
             height: rs(context, 68),
             decoration: BoxDecoration(
-              color: const Color(0xFF00C076).withOpacity(0.08),
+              color: colors.gain.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(rs(context, 20)),
               border: Border.all(
-                color: const Color(0xFF00C076).withOpacity(0.2),
+                color: colors.gain.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
             child: Icon(
               Icons.bookmark_border_rounded,
-              color: const Color(0xFF00C076),
+              color: colors.gain,
               size: rs(context, 28),
             ),
           ),
           SizedBox(height: rs(context, AppSpacing.md)),
           Text(
             'No stocks yet',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: rs(context, 16),
+            style: textTheme.titleLarge?.copyWith(
+              color: colors.textPri,
               fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
             ),
           ),
           SizedBox(height: rs(context, 6)),
           Text(
             'Add instruments to track them here',
-            style: TextStyle(
-              color: const Color(0xFF4B5563),
-              fontSize: rs(context, 13),
-            ),
+            style: textTheme.bodySmall?.copyWith(color: colors.textSec),
           ),
         ],
       ),
@@ -714,6 +695,7 @@ class WatchlistPage extends StatelessWidget {
     BuildContext context,
     String message,
     AppColorScheme colors,
+    TextTheme textTheme,
   ) {
     return Center(
       child: Column(
@@ -721,16 +703,13 @@ class WatchlistPage extends StatelessWidget {
         children: [
           Icon(
             Icons.error_outline_rounded,
-            color: const Color(0xFFEF4444),
+            color: colors.loss,
             size: rs(context, 36),
           ),
           SizedBox(height: rs(context, 12)),
           Text(
             message,
-            style: TextStyle(
-              color: const Color(0xFF6B7280),
-              fontSize: rs(context, 14),
-            ),
+            style: textTheme.bodyMedium?.copyWith(color: colors.textSec),
           ),
         ],
       ),
@@ -772,6 +751,8 @@ class _MarketCard extends StatelessWidget {
     required this.change,
     required this.changePercent,
     required this.isPositive,
+    required this.colors,
+    required this.textTheme,
   });
 
   final String title;
@@ -779,22 +760,22 @@ class _MarketCard extends StatelessWidget {
   final String change;
   final String changePercent;
   final bool isPositive;
+  final AppColorScheme colors;
+  final TextTheme textTheme;
 
   @override
   Widget build(BuildContext context) {
-    final gainColor = const Color(0xFF00C076);
-    final lossColor = const Color(0xFFEF4444);
-    final color = isPositive ? gainColor : lossColor;
+    final color = isPositive ? colors.gain : colors.loss;
     final bgColor = isPositive
-        ? const Color(0xFF00C076).withOpacity(0.08)
-        : const Color(0xFFEF4444).withOpacity(0.08);
+        ? colors.gain.withValues(alpha: 0.08)
+        : colors.loss.withValues(alpha: 0.08);
 
     return Container(
       padding: EdgeInsets.all(rs(context, 14)),
       decoration: BoxDecoration(
-        color: const Color(0xFF111827),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(rs(context, 14)),
-        border: Border.all(color: const Color(0xFF1E2A3A), width: 1),
+        border: Border.all(color: colors.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -803,9 +784,8 @@ class _MarketCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  color: const Color(0xFF6B7280),
-                  fontSize: rs(context, 10.5),
+                style: textTheme.labelSmall?.copyWith(
+                  color: colors.textSec,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.9,
                 ),
@@ -818,7 +798,10 @@ class _MarketCard extends StatelessWidget {
                   color: color,
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(color: color.withOpacity(0.6), blurRadius: 5),
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.6),
+                      blurRadius: 5,
+                    ),
                   ],
                 ),
               ),
@@ -827,10 +810,9 @@ class _MarketCard extends StatelessWidget {
           SizedBox(height: rs(context, 8)),
           Text(
             value,
-            style: TextStyle(
-              color: Colors.white,
+            style: textTheme.titleLarge?.copyWith(
+              color: colors.textPri,
               fontWeight: FontWeight.w800,
-              fontSize: rs(context, 17),
               letterSpacing: -0.6,
             ),
           ),
@@ -843,7 +825,7 @@ class _MarketCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(rs(context, 6)),
-              border: Border.all(color: color.withOpacity(0.2), width: 1),
+              border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -857,9 +839,8 @@ class _MarketCard extends StatelessWidget {
                 ),
                 Text(
                   '$change  $changePercent',
-                  style: TextStyle(
+                  style: textTheme.labelSmall?.copyWith(
                     color: color,
-                    fontSize: rs(context, 10.5),
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.1,
                   ),
