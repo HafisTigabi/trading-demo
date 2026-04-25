@@ -1,118 +1,91 @@
-# Trading Demo App | High-End FinTech Experience
+# Technical Report: Trading Application Watchlist Implementation
 
-![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
-![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
-![Clean Architecture](https://img.shields.io/badge/Architecture-Clean_Arch-green?style=for-the-badge)
-
-A premium, production-grade Trading application built with Flutter, demonstrating advanced architectural patterns, high-performance UI rendering, and scalable state management. This project serves as a showcase for modern mobile development practices in the financial technology sector.
+## Overview
+This project is a professional-grade Watchlist implementation developed as part of the Flutter Developer assessment for **021 Trade**. The core objective was to implement a dynamic stock reordering system leveraging the **BLoC (Business Logic Component)** architecture while maintaining a premium UI/UX, full responsiveness, and high code quality.
 
 ---
 
-## 🚀 Project Overview
-
-The **Trading Demo App** is designed for the modern trader, combining ultra-fast performance with a high-fidelity "Glassmorphism" aesthetic. The application prioritizes split-second responsiveness and data integrity, essential for high-stakes trading environments.
-
-- **Fluid UX:** Optimized for 60/120 FPS interactions.
-- **Glassmorphism Design:** A sleek, dark-themed interface utilizing backdrop filters and subtle gradients for a premium feel.
-- **Enterprise-Ready:** Built on Clean Architecture principles to ensure long-term maintainability and testability.
-
----
-
-## 🏗️ Architecture Breakdown
-
-The project follows the **Clean Architecture** pattern, enforcing a strict separation of concerns to decouple business logic from the UI and external data sources.
+## Architectural Approach
+The application follows **Clean Architecture** principles to ensure the codebase remains maintainable, testable, and scalable.
 
 ### 1. Data Layer
-- **Models:** Implements `StockModel` with JSON serialization.
-- **Data Sources:** Currently utilizes local dummy data/helpers for rapid prototyping, easily swappable for REST/WebSocket implementations.
+* **Models:** Implements `StockModel` with type-safe JSON serialization.
+* **Data Sources:** Currently manages a local repository of sample data, architected to be seamlessly replaced by REST or WebSocket providers.
 
 ### 2. Domain Layer
-- **Logic:** Business rules are encapsulated within the BLoC layer, ensuring that the UI remains a "dumb" reflection of the state.
-- **Entities:** Pure Dart classes representing the core trading objects.
+* **Logic:** Business rules are encapsulated independently of the UI framework.
+* **Entities:** Core trading objects are defined as pure Dart classes to maintain logic integrity.
 
 ### 3. Presentation Layer
-- **State Management:** Flutter BLoC for predictable, unidirectional data flow.
-- **Widgets:** Highly atomic components (e.g., `StockTile`) designed for maximum reuse.
-- **Pages:** Feature-specific views built using responsive layouts.
+* **State Management:** Utilizes the **BLoC pattern** for predictable, unidirectional data flow.
+* **Atomic Design:** Built using small, reusable widgets (e.g., `StockTile`) to minimize code duplication.
 
 ---
 
-## 🧠 BLoC Logic Deep-Dive: Reorder/Swap Functionality
+## BLoC Implementation: Reordering Logic
+The primary requirement of swapping stock positions is managed within the `WatchlistBloc`. To ensure state predictability and UI fluidity, the following logic was applied:
 
-A core feature of the app is the dynamic Watchlist reordering. Handling list swaps in a reactive environment requires precision to prevent UI flickering or state corruption.
-
-### The Logic
-The `WatchlistBloc` handles the `_ReorderStocks` event by:
-1.  **Validating Indices:** Ensuring `oldIndex` and `newIndex` are within bounds.
-2.  **Immutability:** Creating a new list instance from the current state to respect the "State is Immutable" principle.
-3.  **Index Normalization:** Adjusting the `targetIndex` if the item is moved downwards (as `ReorderableListView` provides the index *before* the item is removed).
-4.  **State Emission:** Emitting a `_Loaded` state with the updated `unmodifiable` list, triggering a pinpoint UI rebuild.
+* **Immutability:** Each reorder event generates a new list instance, adhering to the principle of state immutability to prevent unintended UI side effects.
+* **Index Normalization:** The implementation explicitly handles the index shift inherent in Flutter's `ReorderableListView` (adjusting the `newIndex` by -1 when moving items downward).
+* **Type Safety:** Uses sealed classes for Events and States, ensuring exhaustive pattern matching and eliminating runtime state errors.
 
 ```dart
-// Snippet of the Reorder Logic
-final reordered = List<StockModel>.from(currentList);
-var targetIndex = event.newIndex;
+final updatedList = List<StockModel>.from(currentStocks);
+
+int targetIndex = event.newIndex;
 if (targetIndex > event.oldIndex) targetIndex -= 1;
 
-final movedItem = reordered.removeAt(event.oldIndex);
-reordered.insert(targetIndex, movedItem);
+final item = updatedList.removeAt(event.oldIndex);
+updatedList.insert(targetIndex, item);
 
-emit(currentState.copyWith(
-  watchlists: {...watchlists, selectedIndex: List.unmodifiable(reordered)}
+emit(WatchlistState.loaded(
+  stocks: List.unmodifiable(updatedList),
+  selectedIndex: state.selectedIndex,
 ));
 ```
 
 ---
 
-## 🗺️ Navigation Strategy: GoRouter
+## Key Features & Quality Pillars
 
-The app utilizes **GoRouter** for declarative, type-safe navigation, providing several production benefits:
+### Navigation (GoRouter)
+* **Declarative Routing:** Navigation is treated as a function of the app state.
+* **Scalability:** Implementation is ready for deep linking and complex nested navigation.
 
-- **Deep Linking:** Native support for URL-based navigation, essential for future web/desktop parity.
-- **Shell Routes:** Effortless implementation of persistent UI elements (like the Bottom Navigation Bar) using `ShellRoute`.
-- **Declarative Logic:** Navigation is treated as a state, making it easier to handle complex authentication or redirect flows.
-- **Error Handling:** Robust `errorBuilder` for gracefully handling "Coming Soon" or invalid routes.
+###  UI/UX Excellence
+* **Premium Aesthetic:** Consistent dark theme with high-fidelity "Glassmorphism" elements.
+* **Interactive Feedback:** Smooth drag-and-drop transitions, swipe-to-delete gestures, and SnackBar confirmations for all user actions.
 
----
+###  Responsiveness
+* **Adaptive Scaling:** Utilizes a custom `rs` (Responsive Size) utility to scale spacing, typography, and container dimensions dynamically across various mobile screen ratios.
 
-## 💎 Quality Pillars
-
-### 🔒 Type Safety
-By leveraging **Freezed**, we ensure that our BLoCs and Data Models are immutable and type-safe. This eliminates runtime errors related to nullability or unexpected state mutations.
-
-### 📱 Responsiveness
-The app uses a custom `rs` (Responsive Size) helper utility. Unlike standard scaling, this logic applies tailored multipliers for Mobile, Tablet, and Desktop breakpoints, ensuring the "Glassmorphism" effect looks consistent across all screen ratios.
-
-### ♻️ Code Reusability
-- **Shared Widgets:** Common UI elements (Buttons, Tiles, Loaders) reside in `lib/shared/widget`.
-- **Theme Extensions:** Centralized `AppColorScheme` and `TextTheme` allow for global style updates with zero friction.
+###  Code Quality & Type Safety
+* **Strong Typing:** Leverages `freezed` and `json_serializable` for immutable data models and states.
+* **Maintainability:** Clear separation of layers with a focus on atomic widget reusability and minimal logic duplication.
 
 ---
 
-## 📂 Folder Structure
-
+## Project Structure
 ```text
 lib/
 ├── core/
-│   ├── constants/       # App-wide constants
-│   └── theme/           # Glassmorphism & Color schemes
+│   └── theme/           # Design tokens and color schemes
 ├── features/
 │   └── trading/
-│       ├── data/        # Models & Data sources
+│       ├── data/        # Models and data mapping
 │       ├── domain/      # Core entities
-│       └── presentation/# BLoC, Pages, and Widgets
+│       └── presentation/# BLoC, Pages, and Feature widgets
 ├── shared/
-│   ├── helper/          # Responsive scaling & Dummy data
+│   ├── helper/          # Responsive scaling utilities
 │   ├── routes/          # GoRouter configuration
-│   └── widget/          # Atomic UI components
-├── app.dart             # Root widget & Theme setup
+│   └── widget/          # Reusable UI components
+├── app.dart             # Root widget and theme setup
 └── main.dart            # Entry point
 ```
 
----
-
-## 🛠️ Tech Stack
-- **State Management:** `flutter_bloc`
-- **Routing:** `go_router`
-- **Code Generation:** `freezed`, `json_serializable`
-- **UI:** Custom Glassmorphism implementation with `BackdropFilter`
+## Technical Stack
+* **Framework:** Flutter (Latest Stable)
+* **State Management:** `flutter_bloc`
+* **Routing:** `go_router`
+* **Modeling:** `freezed`, `json_serializable`
+* **Responsiveness:** Custom Scaling Helper
